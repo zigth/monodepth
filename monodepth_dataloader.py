@@ -14,7 +14,7 @@ from __future__ import absolute_import, division, print_function
 import tensorflow as tf
 
 def string_length_tf(t):
-  return tf.py_func(len, [t], [tf.int64])
+  return tf.py_function(len, [t], [tf.int64])
 
 class MonodepthDataloader(object):
     """monodepth dataloader"""
@@ -28,19 +28,24 @@ class MonodepthDataloader(object):
         self.left_image_batch  = None
         self.right_image_batch = None
 
-        input_queue = tf.train.string_input_producer([filenames_file], shuffle=False)
-        line_reader = tf.TextLineReader()
-        _, line = line_reader.read(input_queue)
+        input_queue = tf.data.Dataset.from_tensor_slices([filenames_file])
+        #input_queue = tf.train.string_input_producer([filenames_file], shuffle=False)
+        line_iterator = input_queue.make_one_shot_iterator()
+        #line_reader = tf.TextLineReader()
+        #_, line = line_reader.read(input_queue)
 
-        split_line = tf.string_split([line]).values
+        #split_line = tf.string_split([line]).values
 
         # we load only one image for test, except if we trained a stereo model
         if mode == 'test' and not self.params.do_stereo:
-            left_image_path  = tf.string_join([self.data_path, split_line[0]])
+            #left_image_path  = tf.string_join([self.data_path, split_line[0]])
+            left_image_path = tf.string_join([self.data_path, line_iterator.get_next()])
             left_image_o  = self.read_image(left_image_path)
         else:
-            left_image_path  = tf.string_join([self.data_path, split_line[0]])
-            right_image_path = tf.string_join([self.data_path, split_line[1]])
+            #left_image_path  = tf.string_join([self.data_path, split_line[0]])
+            #right_image_path = tf.string_join([self.data_path, split_line[1]])
+            left_image_path  = tf.string_join([self.data_path, line_iterator.get_next()])
+            right_image_path = tf.string_join([self.data_path, line_iterator.get_next()])
             left_image_o  = self.read_image(left_image_path)
             right_image_o = self.read_image(right_image_path)
 
@@ -60,8 +65,10 @@ class MonodepthDataloader(object):
             # capacity = min_after_dequeue + (num_threads + a small safety margin) * batch_size
             min_after_dequeue = 2048
             capacity = min_after_dequeue + 4 * params.batch_size
-            self.left_image_batch, self.right_image_batch = tf.train.shuffle_batch([left_image, right_image],
-                        params.batch_size, capacity, min_after_dequeue, params.num_threads)
+            self.left_image_batch = tf.data.Dataset.from_tensors([left_image]).shuffle(min_after_dequeue).batch(params.batch_size)
+            self.right_image_batch = tf.data.Dataset.from_tensors([right_image]).shuffle(min_after_dequeue).batch(params.batch_size)
+            #self.left_image_batch, self.right_image_batch = tf.train.shuffle_batch([left_image, right_image],
+                        #params.batch_size, capacity, min_after_dequeue, params.num_threads)
 
         elif mode == 'test':
             self.left_image_batch = tf.stack([left_image_o,  tf.image.flip_left_right(left_image_o)],  0)
@@ -98,7 +105,7 @@ class MonodepthDataloader(object):
     def read_image(self, image_path):
         # tf.decode_image does not return the image size, this is an ugly workaround to handle both jpeg and png
         path_length = string_length_tf(image_path)[0]
-        file_extension = tf.substr(image_path, path_length - 3, 3)
+        file_extension = tf.strings.substr(image_path, path_length - 3, 3)
         file_cond = tf.equal(file_extension, 'jpg')
         
         image  = tf.cond(file_cond, lambda: tf.image.decode_jpeg(tf.read_file(image_path)), lambda: tf.image.decode_png(tf.read_file(image_path)))
