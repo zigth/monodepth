@@ -3,3 +3,5 @@
 python monodepth_main.py --mode train --model_name my_model --data_path data/KITTI/ --filenames_file utils/filenames/kitti_train_files.txt --log_directory tmp/
 
 forfiles /S /M *.png /C "cmd /c rename @file @fname.jpg"
+
+pip install tensorflow==1.13.1 --force-reinstall
