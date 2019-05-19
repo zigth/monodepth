@@ -19,8 +19,8 @@ print(tf.test.is_built_with_cuda())
 data_generator = ImageDataGenerator(validation_split=0.2,
                                rescale=1. / 255)
 
-train_set_size=83457
-val_set_size=20864
+train_set_size=250382
+val_set_size=62595
 batch_size=16
 
 def generator_training_inout(generator, dirIn, dirOut, batch_size, img_height, img_width):
@@ -61,11 +61,11 @@ def generator_validation_inout(generator, dirIn, dirOut, batch_size, img_height,
 
 
 #training_generator = generator_training_inout(data_generator,'data/input','data/output',batch_size,144,256)
-validation_generator = generator_validation_inout(data_generator,'data/input','data/output',batch_size,144,256)
+validation_generator = generator_validation_inout(data_generator,'data/input2','data/output2',batch_size,144,256)
 
 
-if os.path.exists('models/mymodel5.h5'):
-    model=keras.models.load_model("models/mymodel5.h5")
+if os.path.exists('models/mymodel7.h5'):
+    model=keras.models.load_model("models/mymodel7.h5")
 
 #for i in range(random.randint(0,1000)):
 #	data=next(validation_generator)

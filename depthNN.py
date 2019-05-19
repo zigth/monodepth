@@ -39,8 +39,8 @@ print(tf.test.is_built_with_cuda())
 data_generator = ImageDataGenerator(validation_split=0.2,
                                rescale=1. / 255)
 
-train_set_size=83457
-val_set_size=20864
+train_set_size=250382
+val_set_size=62595
 batch_size=16
 
 def generator_training_inout(generator, dirIn, dirOut, batch_size, img_height, img_width):
@@ -80,8 +80,8 @@ def generator_validation_inout(generator, dirIn, dirOut, batch_size, img_height,
         yield X[0], Y[0]
 
 
-training_generator = generator_training_inout(data_generator,'data/input','data/output',batch_size,144,256)
-validation_generator = generator_validation_inout(data_generator,'data/input','data/output',batch_size,144,256)
+training_generator = generator_training_inout(data_generator,'data/input2','data/output2',batch_size,144,256)
+validation_generator = generator_validation_inout(data_generator,'data/input2','data/output2',batch_size,144,256)
 
 #x_train = np.random.random((1000, 20))
 #y_train = keras.utils.to_categorical(np.random.randint(10, size=(1000, 1)), num_classes=10)
@@ -114,22 +114,22 @@ model.add(Conv2DTranspose(64, (3, 3), strides=(2, 2), activation='relu'))
 model.add(Conv2D(1, (3, 3), activation='relu'))
 model.add(Cropping2D(cropping=((0, 1), (0, 1))))
 
-sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+sgd = SGD(lr=0.01, decay=1e-6, momentum=0.8, nesterov=True)
 #adam = Adam(lr=0.01, decay=1e-4)
 model.compile(loss='mean_squared_error',
               optimizer=sgd,
               metrics=['accuracy'])
 
 print(model.summary())
-mycallback = keras.callbacks.ModelCheckpoint(filepath = 'models/mymodel7_{epoch:02d}-{val_loss:.2f}.h5', monitor='val_loss', verbose=0, save_best_only=False, save_weights_only=False, mode='auto', period=1)
-csv_logger = keras.callbacks.CSVLogger('mymodel7.log',append=True)
+mycallback = keras.callbacks.ModelCheckpoint(filepath = 'models/mymodel8_{epoch:02d}-{val_loss:.2f}.h5', monitor='val_loss', verbose=0, save_best_only=False, save_weights_only=False, mode='auto', period=1)
+csv_logger = keras.callbacks.CSVLogger('mymodel8.log',append=True)
 
 #score = model.evaluate(np.array(input_validation_generator), np.array(output_validation_generator), batch_size=32)
-#if os.path.exists('models/mymodel4_03-0.05.h5'):
-#    model = keras.models.load_model("models/mymodel4_03-0.05.h5")
+#if os.path.exists('models/mymodel7_14-0.02.h5'):
+#    model = keras.models.load_model("models/mymodel7_14-0.02.h5")
 
-if os.path.exists('models/mymodel7.h5'):
-    model=keras.models.load_model("models/mymodel7.h5")
+if os.path.exists('models/mymodel8.h5'):
+    model=keras.models.load_model("models/mymodel8.h5")
 else:
     model.fit_generator(
 		training_generator,
@@ -138,6 +138,6 @@ else:
         validation_data=validation_generator,
         validation_steps=val_set_size // batch_size,
         callbacks=[mycallback,csv_logger])
-    model.save('models/mymodel7.h5')
+    model.save('models/mymodel8.h5')
 
 
